@@ -1,6 +1,6 @@
 import { useConnection } from '@/hooks/useConnection';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,11 +8,18 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 
 export default function StartScreen() {
   const router = useRouter();
   const { isConnectionActive, connect } = useConnection();
+  const [tenantName, setTenantName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  const canConnect = useMemo(() => {
+    return tenantName.trim().length > 0 && phoneNumber.trim().length > 0;
+  }, [tenantName, phoneNumber]);
 
   // Navigate to Assistant screen when we have the connection details.
   useEffect(() => {
@@ -37,13 +44,38 @@ export default function StartScreen() {
       />
       <Text style={styles.text}>Chat live with your voice AI agent</Text>
 
+      <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          value={tenantName}
+          onChangeText={setTenantName}
+          placeholder="Tenant name"
+          placeholderTextColor="#8f8f8f"
+          autoCapitalize="words"
+          editable={!isConnectionActive}
+        />
+        <TextInput
+          style={styles.input}
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          placeholder="Phone number"
+          placeholderTextColor="#8f8f8f"
+          keyboardType="phone-pad"
+          textContentType="telephoneNumber"
+          editable={!isConnectionActive}
+        />
+      </View>
+
       <TouchableOpacity
         onPress={() => {
-          connect();
+          connect({
+            tenantName: tenantName.trim(),
+            phoneNumber: phoneNumber.trim(),
+          });
         }}
-        style={styles.button}
+        style={[styles.button, !canConnect ? styles.disabledButton : undefined]}
         activeOpacity={0.7}
-        disabled={isConnectionActive} // Disable button while loading
+        disabled={isConnectionActive || !canConnect}
       >
         {isConnectionActive ? (
           <ActivityIndicator
@@ -74,6 +106,22 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     marginBottom: 24,
   },
+  form: {
+    width: '100%',
+    maxWidth: 320,
+    gap: 12,
+    marginBottom: 24,
+    paddingHorizontal: 24,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#333333',
+    borderRadius: 8,
+    backgroundColor: '#101010',
+    color: '#ffffff',
+    paddingHorizontal: 14,
+  },
   activityIndicator: {
     marginEnd: 8,
   },
@@ -86,6 +134,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 200, // Ensure button has a minimum width when loading
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   buttonText: {
     color: '#ffffff',

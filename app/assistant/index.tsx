@@ -106,7 +106,7 @@ const RoomView = () => {
   }, [isChatEnabled, setChatEnabled]);
   const onExitClick = useCallback(() => {
     connection.disconnect();
-    router.back();
+    router.replace('/');
   }, [connection, router]);
 
   // Layout positioning

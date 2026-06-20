@@ -1,5 +1,11 @@
-import { TokenSource, TokenSourceBase, TokenSourceResponseObject } from 'livekit-client';
-import { createContext, useContext, useMemo, useState } from 'react';
+import { TokenSource, TokenSourceResponseObject } from 'livekit-client';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 import { SessionProvider, useSession } from '@livekit/components-react';
 
 // TODO: Add your Sandbox ID here
@@ -18,15 +24,22 @@ const hardcodedToken = '';
 
 interface ConnectionContextType {
   isConnectionActive: boolean;
-  connect: () => void;
+  connectionInfo: ConnectionInfo | null;
+  connect: (connectionInfo: ConnectionInfo) => void;
   disconnect: () => void;
 }
 
 const ConnectionContext = createContext<ConnectionContextType>({
   isConnectionActive: false,
+  connectionInfo: null,
   connect: () => {},
   disconnect: () => {},
 });
+
+export interface ConnectionInfo {
+  tenantName: string;
+  phoneNumber: string;
+}
 
 export function useConnection() {
   const ctx = useContext(ConnectionContext);
@@ -41,7 +54,31 @@ interface ConnectionProviderProps {
 }
 
 export function ConnectionProvider({ children }: ConnectionProviderProps) {
+  const [sessionKey, setSessionKey] = useState(0);
+
+  const resetSession = useCallback(() => {
+    setSessionKey((currentKey) => currentKey + 1);
+  }, []);
+
+  return (
+    <ConnectionSessionProvider key={sessionKey} resetSession={resetSession}>
+      {children}
+    </ConnectionSessionProvider>
+  );
+}
+
+interface ConnectionSessionProviderProps extends ConnectionProviderProps {
+  resetSession: () => void;
+}
+
+function ConnectionSessionProvider({
+  children,
+  resetSession,
+}: ConnectionSessionProviderProps) {
   const [isConnectionActive, setIsConnectionActive] = useState(false);
+  const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo | null>(
+    null
+  );
 
   const tokenSource = useMemo(() => {
     if (sandboxID) {
@@ -66,16 +103,25 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
   const value = useMemo(() => {
     return {
       isConnectionActive,
-      connect: () => {
+      connectionInfo,
+      connect: (nextConnectionInfo: ConnectionInfo) => {
+        setConnectionInfo(nextConnectionInfo);
         setIsConnectionActive(true);
         startSession();
       },
       disconnect: () => {
         setIsConnectionActive(false);
-        endSession();
+        setConnectionInfo(null);
+        void Promise.resolve(endSession()).finally(resetSession);
       },
     };
-  }, [startSession, endSession, isConnectionActive]);
+  }, [
+    startSession,
+    endSession,
+    isConnectionActive,
+    connectionInfo,
+    resetSession,
+  ]);
 
   return (
     <SessionProvider session={session}>
