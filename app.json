@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "voice-assistant-react-native",
+    "name": "voice-assistant-react-nativeno",
     "slug": "voice-assistant-react-native",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/playstore.png",
     "scheme": "myapp",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -15,7 +15,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/playstore.png",
         "backgroundColor": "#ffffff"
       },
       "package": "io.livekit.voiceassistantreactnative",
@@ -53,6 +53,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e60b5053-aa76-421c-b097-17218f5ba01b"
+      }
+    },
+    "owner": "domanasreldin"
   }
 }
